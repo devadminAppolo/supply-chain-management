@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+
+    <title>Drivers</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+        <div class="col-md-2 p-0">
+            <div th:replace="fragments/sidebar :: sidebar"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-10 p-4">
+
+            <h2 class="mb-4">Driver Master</h2>
+
+            <form>
+
+                <div class="mb-3">
+                    <input class="form-control"
+                           placeholder="Driver Number">
+                </div>
+
+                <div class="mb-3">
+                    <input class="form-control"
+                           placeholder="Driver Name">
+                </div>
+
+                <div class="mb-3">
+                    <input class="form-control"
+                           placeholder="License Number">
+                </div>
+
+                <div class="mb-3">
+                    <input class="form-control"
+                           placeholder="Phone Number">
+                </div>
+
+                <button class="btn btn-primary">
+                    Save Driver
+                </button>
+
+            </form>
+
+            <hr>
+
+            <table class="table table-bordered table-hover">
+
+                <thead>
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>Driver No</th>
+                    <th>Driver Name</th>
+                    <th>License No</th>
+                    <th>Phone</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody>
+
+                <tr>
+
+                    <td>1</td>
+                    <td>DRV001</td>
+                    <td>John Smith</td>
+                    <td>DL123456</td>
+                    <td>9876543210</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>2</td>
+                    <td>DRV002</td>
+                    <td>David Miller</td>
+                    <td>DL987654</td>
+                    <td>9876501234</td>
+
+                </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

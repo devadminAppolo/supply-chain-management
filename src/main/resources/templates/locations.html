@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+
+    <title>Locations</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- Sidebar -->
+        <div class="col-md-2 p-0">
+            <div th:replace="fragments/sidebar :: sidebar"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-10 p-4">
+
+            <h2 class="mb-4">Location Master</h2>
+
+            <form>
+
+                <div class="mb-3">
+                    <input class="form-control"
+                           placeholder="Location Code">
+                </div>
+
+                <div class="mb-3">
+                    <input class="form-control"
+                           placeholder="Location Name">
+                </div>
+
+                <div class="mb-3">
+                    <input class="form-control"
+                           placeholder="City">
+                </div>
+
+                <div class="mb-3">
+                    <input class="form-control"
+                           placeholder="State">
+                </div>
+
+                <button class="btn btn-primary">
+                    Save Location
+                </button>
+
+            </form>
+
+            <hr>
+
+            <table class="table table-bordered table-hover">
+
+                <thead>
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>Location Code</th>
+                    <th>Location Name</th>
+                    <th>City</th>
+                    <th>State</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody>
+
+                <tr>
+
+                    <td>1</td>
+                    <td>LOC001</td>
+                    <td>New York DC</td>
+                    <td>New York</td>
+                    <td>NY</td>
+
+                </tr>
+
+                <tr>
+
+                    <td>2</td>
+                    <td>LOC002</td>
+                    <td>Chicago DC</td>
+                    <td>Chicago</td>
+                    <td>IL</td>
+
+                </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
