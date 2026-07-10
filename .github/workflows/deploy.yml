@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Source
         uses: actions/checkout@v4
 
@@ -24,19 +23,19 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Project
-        run: ./gradlew clean build -x test
+        run: ./gradlew clean bootJar -x test
 
-      - name: Copy JAR to EC2
+      - name: Copy app.jar to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
-          source: "build/libs/*.jar"
-          target: "/opt/scm"
+          source: "build/libs/app.jar"
+          target: "/home/ubuntu"
 
-      - name: Restart Spring Boot Service
+      - name: Deploy and Restart
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -44,7 +43,9 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
           script: |
-            sudo find /opt/scm/build/libs -name "*.jar" -exec mv {} /opt/scm/app.jar \;
-            sudo rm -rf /opt/scm/build
-            sudo systemctl restart scm
+            sudo systemctl stop scm
+            sudo mv /home/ubuntu/build/libs/app.jar /opt/scm/app.jar
+            sudo chown ubuntu:ubuntu /opt/scm/app.jar
+            sudo chmod 644 /opt/scm/app.jar
+            sudo systemctl start scm
             sudo systemctl status scm --no-pager
