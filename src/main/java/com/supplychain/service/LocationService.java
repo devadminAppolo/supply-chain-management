@@ -9,6 +9,8 @@ public interface LocationService {
 
     void save(LocationDto dto);
 
+    LocationDto update(Long id, LocationDto dto);
+
     List<LocationDto> findAll();
 
 }

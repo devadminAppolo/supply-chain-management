@@ -3,6 +3,8 @@ package com.supplychain.mapper;
 import com.supplychain.dto.ShipmentDto;
 import com.supplychain.entity.Shipment;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 import java.util.List;
 
@@ -14,4 +16,7 @@ public interface ShipmentMapper {
     ShipmentDto toDto(Shipment entity);
 
     List<ShipmentDto> toDtoList(List<Shipment> entities);
+
+    @Mapping(target = "id", ignore = true)
+    void updateEntity(ShipmentDto dto, @MappingTarget Shipment entity);
 }

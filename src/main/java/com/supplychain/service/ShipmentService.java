@@ -8,5 +8,7 @@ public interface ShipmentService {
 
     void save(ShipmentDto dto);
 
+    ShipmentDto update(Long id, ShipmentDto dto);
+
     List<ShipmentDto> findAll();
 }

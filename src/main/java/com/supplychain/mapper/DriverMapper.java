@@ -3,6 +3,8 @@ package com.supplychain.mapper;
 import com.supplychain.dto.DriverDto;
 import com.supplychain.entity.Driver;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 import java.util.List;
 
@@ -14,4 +16,7 @@ public interface DriverMapper {
     DriverDto toDto(Driver entity);
 
     List<DriverDto> toDtoList(List<Driver> entities);
+
+    @Mapping(target = "id", ignore = true)
+    void updateEntity(DriverDto dto, @MappingTarget Driver entity);
 }
