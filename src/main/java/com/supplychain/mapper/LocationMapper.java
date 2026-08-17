@@ -17,6 +17,11 @@ public interface LocationMapper {
 
     List<LocationDto> toDtoList(List<Location> entities);
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id",           ignore = true)
+    @Mapping(target = "createdBy",    ignore = true)
+    @Mapping(target = "createdDate",  ignore = true)
+    @Mapping(target = "modifiedBy",   ignore = true)
+    @Mapping(target = "modifiedDate", ignore = true)
+    @Mapping(target = "deleted",      ignore = true)
     void updateEntity(LocationDto dto, @MappingTarget Location entity);
 }

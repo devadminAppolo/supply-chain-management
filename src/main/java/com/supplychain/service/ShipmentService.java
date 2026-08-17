@@ -11,4 +11,8 @@ public interface ShipmentService {
     ShipmentDto update(Long id, ShipmentDto dto);
 
     List<ShipmentDto> findAll();
+
+    void deleteById(Long id);
+
+    void deleteAllByIds(List<Long> ids);
 }

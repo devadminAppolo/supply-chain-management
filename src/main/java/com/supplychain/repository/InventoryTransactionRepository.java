@@ -1,0 +1,43 @@
+package com.supplychain.repository;
+
+import com.supplychain.entity.InventoryTransaction;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Repository
+public interface InventoryTransactionRepository
+        extends JpaRepository<InventoryTransaction, Long>, JpaSpecificationExecutor<InventoryTransaction> {
+
+    // -------------------------------------------------------------------------
+    // Dashboard queries
+    // -------------------------------------------------------------------------
+
+    /** Counts active transactions whose transactionDate falls within [startOfDay, endOfDay). */
+    @Query("""
+            SELECT COUNT(t)
+            FROM InventoryTransaction t
+            WHERE t.deleted = false
+              AND t.transactionDate >= :startOfDay
+              AND t.transactionDate <  :endOfDay
+            """)
+    long countTodayTransactions(
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay")   LocalDateTime endOfDay
+    );
+
+    /** Returns the most recent active transactions ordered by transactionDate DESC. Use with PageRequest.of(0, N). */
+    @Query("""
+            SELECT t
+            FROM InventoryTransaction t
+            WHERE t.deleted = false
+            ORDER BY t.transactionDate DESC
+            """)
+    List<InventoryTransaction> findRecentTransactions(Pageable pageable);
+}

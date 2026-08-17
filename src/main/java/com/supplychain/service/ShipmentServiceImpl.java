@@ -39,4 +39,17 @@ public class ShipmentServiceImpl implements ShipmentService {
 
         return mapper.toDtoList(repository.findAll());
     }
+
+    @Override
+    public void deleteById(Long id) {
+        if (!repository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shipment not found with id: " + id);
+        }
+        repository.deleteById(id);
+    }
+
+    @Override
+    public void deleteAllByIds(List<Long> ids) {
+        repository.deleteAllByIdInBatch(ids);
+    }
 }

@@ -11,4 +11,8 @@ public interface DriverService {
 
     List<DriverDto> findAll();
 
+    void deleteById(Long id);
+
+    void deleteAllByIds(List<Long> ids);
+
 }

@@ -5,6 +5,7 @@ import com.supplychain.dto.DriverDto;
 import com.supplychain.service.DriverService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,5 +42,17 @@ public class DriverController {
     @PutMapping("/{id}")
     public ResponseEntity<DriverDto> update(@PathVariable Long id, @RequestBody DriverDto dto) {
         return ResponseEntity.ok(driverService.update(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteById(@PathVariable Long id) {
+        driverService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/batch")
+    public ResponseEntity<Void> deleteAllByIds(@RequestBody List<Long> ids) {
+        driverService.deleteAllByIds(ids);
+        return ResponseEntity.noContent().build();
     }
 }
