@@ -19,10 +19,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/api/locations")
 @RequiredArgsConstructor
@@ -34,6 +36,13 @@ public class LocationController {
     public ResponseEntity<ApiResponse<LocationDto>> save(@Valid @RequestBody LocationDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(locationService.save(dto)));
+    }
+
+    @PostMapping("/create-all")
+    public ResponseEntity<ApiResponse<List<LocationDto>>> saveAll(
+            @RequestBody List<@Valid LocationDto> dtos) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(locationService.saveAll(dtos)));
     }
 
     @PutMapping("/{id}")

@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -43,6 +45,46 @@ public class LocationServiceImpl implements LocationService {
         Location saved = repository.save(entity);
         log.info("Created location id={}, code={}", saved.getId(), saved.getLocationCode());
         return mapper.toDto(saved);
+    }
+
+    // -------------------------------------------------------------------------
+    // Bulk create
+    // -------------------------------------------------------------------------
+
+    @Override
+    @Transactional
+    public List<LocationDto> saveAll(List<LocationDto> dtos) {
+        // 1. Reject duplicate codes within the same request
+        Set<String> seen = new HashSet<>();
+        for (LocationDto dto : dtos) {
+            if (!seen.add(dto.getLocationCode())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Duplicate location code in request: " + dto.getLocationCode());
+            }
+        }
+
+        // 2. Reject codes that already exist in the database
+        for (LocationDto dto : dtos) {
+            if (repository.existsByLocationCodeAndDeletedFalse(dto.getLocationCode())) {
+                log.warn("Duplicate location code on bulk create: {}", dto.getLocationCode());
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Location code already exists: " + dto.getLocationCode());
+            }
+        }
+
+        // 3. Map, set defaults, and persist atomically
+        List<Location> entities = dtos.stream()
+                .map(dto -> {
+                    Location entity = mapper.toEntity(dto);
+                    entity.setDeleted(false);
+                    entity.setActive(true);
+                    return entity;
+                })
+                .toList();
+
+        List<Location> saved = repository.saveAll(entities);
+        log.info("Bulk-created {} locations", saved.size());
+        return mapper.toDtoList(saved);
     }
 
     // -------------------------------------------------------------------------

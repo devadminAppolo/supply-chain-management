@@ -11,6 +11,8 @@ public interface LocationService {
 
     LocationDto save(LocationDto dto);
 
+    List<LocationDto> saveAll(List<LocationDto> dtos);
+
     LocationDto update(Long id, LocationDto dto);
 
     LocationDto findById(Long id);
