@@ -3,6 +3,8 @@ package com.supplychain.procurement.purchaseorder.presentation.controller;
 import com.supplychain.common.application.dto.ApiResponse;
 import com.supplychain.common.application.dto.DropdownOptionDto;
 import com.supplychain.common.application.dto.PageResponse;
+import com.supplychain.procurement.asn.application.dto.AvailablePurchaseOrderDto;
+import com.supplychain.procurement.asn.application.dto.AvailablePurchaseOrderLineDto;
 import com.supplychain.procurement.purchaseorder.application.dto.PurchaseOrderDto;
 import com.supplychain.procurement.purchaseorder.application.dto.XmlImportRequestDto;
 import com.supplychain.procurement.purchaseorder.application.service.PurchaseOrderService;
@@ -95,6 +97,18 @@ public class PurchaseOrderController {
     @GetMapping("/dropdown")
     public ResponseEntity<ApiResponse<List<DropdownOptionDto>>> findDropdown() {
         return ResponseEntity.ok(ApiResponse.success(purchaseOrderService.findDropdown()));
+    }
+
+    @GetMapping("/available-for-asn")
+    public ResponseEntity<ApiResponse<PageResponse<AvailablePurchaseOrderDto>>> getAvailableForAsn(
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 20, sort = "poDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(purchaseOrderService.getAvailableForAsn(search, pageable)));
+    }
+
+    @GetMapping("/{poId}/available-asn-lines")
+    public ResponseEntity<ApiResponse<List<AvailablePurchaseOrderLineDto>>> getAvailableAsnLines(@PathVariable Long poId) {
+        return ResponseEntity.ok(ApiResponse.success(purchaseOrderService.getAvailableAsnLines(poId)));
     }
 
     @DeleteMapping("/{id}")

@@ -6,6 +6,9 @@ import com.supplychain.procurement.purchaseorder.application.dto.PurchaseOrderDt
 import com.supplychain.procurement.purchaseorder.domain.enums.PoStatus;
 import org.springframework.data.domain.Pageable;
 
+import com.supplychain.procurement.asn.application.dto.AvailablePurchaseOrderDto;
+import com.supplychain.procurement.asn.application.dto.AvailablePurchaseOrderLineDto;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -30,4 +33,8 @@ public interface PurchaseOrderService {
     void deleteById(Long id);
 
     void deleteAllByIds(List<Long> ids);
+
+    PageResponse<AvailablePurchaseOrderDto> getAvailableForAsn(String search, Pageable pageable);
+
+    List<AvailablePurchaseOrderLineDto> getAvailableAsnLines(Long poId);
 }

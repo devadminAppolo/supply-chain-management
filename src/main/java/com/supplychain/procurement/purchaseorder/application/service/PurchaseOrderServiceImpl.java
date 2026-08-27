@@ -27,6 +27,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import com.supplychain.procurement.asn.application.dto.AvailablePurchaseOrderDto;
+import com.supplychain.procurement.asn.application.dto.AvailablePurchaseOrderLineDto;
+import com.supplychain.procurement.asn.infrastructure.repository.AdvanceShippingNoticeLineRepository;
+import com.supplychain.procurement.purchaseorder.domain.enums.LineStatus;
+import com.supplychain.procurement.purchaseorder.infrastructure.repository.PurchaseOrderLineItemRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -35,9 +42,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
-    private final PurchaseOrderRepository     repository;
-    private final PurchaseOrderMapper         mapper;
-    private final PurchaseOrderLineItemMapper lineItemMapper;
+    private final PurchaseOrderRepository             repository;
+    private final PurchaseOrderLineItemRepository     poLineRepository;
+    private final AdvanceShippingNoticeLineRepository asnLineRepository;
+    private final PurchaseOrderMapper                 mapper;
+    private final PurchaseOrderLineItemMapper         lineItemMapper;
 
     @Override
     @Transactional
@@ -204,6 +213,105 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
         repository.saveAll(entities);
         log.info("Soft-deleted {} Purchase Orders", entities.size());
+    }
+
+    @Override
+    public PageResponse<AvailablePurchaseOrderDto> getAvailableForAsn(String search, Pageable pageable) {
+        Specification<PurchaseOrder> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("deleted"), false));
+            predicates.add(root.get("poStatus").in(
+                    PoStatus.APPROVED,
+                    PoStatus.SENT_TO_SUPPLIER,
+                    PoStatus.SUPPLIER_CONFIRMED,
+                    PoStatus.PARTIALLY_CONFIRMED,
+                    PoStatus.PARTIALLY_SHIPPED
+            ));
+
+            if (search != null && !search.isBlank()) {
+                String pattern = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("poNumber")), pattern),
+                        cb.like(cb.lower(root.get("supplier")), pattern),
+                        cb.like(cb.lower(root.get("warehouse")), pattern)
+                ));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<PurchaseOrder> poPage = repository.findAll(spec, pageable);
+
+        List<AvailablePurchaseOrderDto> availableDtos = poPage.getContent().stream()
+                .map(po -> {
+                    List<PurchaseOrderLineItem> activeLines = poLineRepository.findByPurchaseOrderIdAndDeletedFalseOrderByLineNumberAsc(po.getId());
+                    int shippableCount = 0;
+                    for (PurchaseOrderLineItem line : activeLines) {
+                        if (line.getLineStatus() != LineStatus.CANCELLED && line.getLineStatus() != LineStatus.CLOSED && line.getLineStatus() != LineStatus.REJECTED) {
+                            BigDecimal shipped = asnLineRepository.sumShippedQuantityByPoLineId(line.getId());
+                            if (line.getQuantityOrdered().subtract(shipped).compareTo(BigDecimal.ZERO) > 0) {
+                                shippableCount++;
+                            }
+                        }
+                    }
+
+                    if (shippableCount > 0) {
+                        return AvailablePurchaseOrderDto.builder()
+                                .id(po.getId())
+                                .poNumber(po.getPoNumber())
+                                .poDate(po.getPoDate())
+                                .poStatus(po.getPoStatus())
+                                .supplier(po.getSupplier())
+                                .warehouse(po.getWarehouse())
+                                .distributionCenter(po.getDistributionCenter())
+                                .currencyCode(po.getCurrencyCode())
+                                .totalLines(activeLines.size())
+                                .shippableLinesCount(shippableCount)
+                                .build();
+                    }
+                    return null;
+                })
+                .filter(dto -> dto != null)
+                .toList();
+
+        Page<AvailablePurchaseOrderDto> resultPage = new PageImpl<>(availableDtos, pageable, poPage.getTotalElements());
+        return PageResponse.of(resultPage);
+    }
+
+    @Override
+    public List<AvailablePurchaseOrderLineDto> getAvailableAsnLines(Long poId) {
+        PurchaseOrder po = findActiveOrThrow(poId);
+        List<PurchaseOrderLineItem> activeLines = poLineRepository.findByPurchaseOrderIdAndDeletedFalseOrderByLineNumberAsc(po.getId());
+
+        List<AvailablePurchaseOrderLineDto> availableLines = new ArrayList<>();
+        for (PurchaseOrderLineItem line : activeLines) {
+            if (line.getLineStatus() == LineStatus.CANCELLED || line.getLineStatus() == LineStatus.CLOSED || line.getLineStatus() == LineStatus.REJECTED) {
+                continue;
+            }
+
+            BigDecimal previouslyShipped = asnLineRepository.sumShippedQuantityByPoLineId(line.getId());
+            BigDecimal remaining = line.getQuantityOrdered().subtract(previouslyShipped);
+
+            if (remaining.compareTo(BigDecimal.ZERO) > 0) {
+                availableLines.add(AvailablePurchaseOrderLineDto.builder()
+                        .poLineId(line.getId())
+                        .lineNumber(line.getLineNumber())
+                        .itemCode(line.getItemCode())
+                        .itemName(line.getItemName())
+                        .supplierItemCode(line.getSupplierItemCode())
+                        .itemGtin(line.getItemGtin())
+                        .orderedQuantity(line.getQuantityOrdered())
+                        .previouslyShippedQuantity(previouslyShipped)
+                        .remainingQuantity(remaining)
+                        .quantityUom(line.getQuantityUom())
+                        .unitPrice(line.getUnitPrice())
+                        .currencyCode(line.getCurrencyCode())
+                        .lineStatus(line.getLineStatus())
+                        .build());
+            }
+        }
+
+        return availableLines;
     }
 
     // -------------------------------------------------------------------------
