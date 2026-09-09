@@ -5,6 +5,7 @@ public enum AsnStatus {
     SUBMITTED,
     IN_TRANSIT,
     ARRIVED,
+    PARTIALLY_RECEIVED,
     RECEIVED,
     CANCELLED,
     CLOSED

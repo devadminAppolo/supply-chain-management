@@ -5,5 +5,7 @@ public enum BinType {
     PICKING,
     RESERVE,
     BULK,
-    REPLENISHMENT
+    REPLENISHMENT,
+    STAGING,
+    ACTIVE
 }

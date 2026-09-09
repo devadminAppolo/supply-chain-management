@@ -37,6 +37,12 @@ import java.util.List;
 public class AdvanceShippingNoticeController {
 
     private final AdvanceShippingNoticeService asnService;
+    private final com.supplychain.wms.receiving.application.service.ReceivingService receivingService;
+
+    @GetMapping("/{asnId}/receiving-details")
+    public ResponseEntity<ApiResponse<com.supplychain.wms.receiving.application.dto.AsnReceivingDetailsDto>> getReceivingDetails(@PathVariable Long asnId) {
+        return ResponseEntity.ok(ApiResponse.success(receivingService.getAsnReceivingDetails(asnId)));
+    }
 
     @PostMapping
     public ResponseEntity<ApiResponse<AsnResponseDto>> create(@Valid @RequestBody AsnCreateRequestDto request) {
