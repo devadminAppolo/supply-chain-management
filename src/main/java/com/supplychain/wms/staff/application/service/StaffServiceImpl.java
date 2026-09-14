@@ -123,11 +123,9 @@ public class StaffServiceImpl implements StaffService {
 
         return repository.findAll(spec)
                 .stream()
-                .map(staff -> {
-                    String displayName = staff.getDisplayName();
-                    return new DropdownOptionDto(displayName, displayName);
-                })
-                .distinct()
+                .map(staff -> new DropdownOptionDto(
+                        staff.getDisplayName(),
+                        String.valueOf(staff.getId())))
                 .toList();
     }
 

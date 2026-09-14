@@ -7,5 +7,9 @@ public enum TransactionType {
     ADJUSTMENT_IN,
     ADJUSTMENT_OUT,
     DAMAGE,
-    RETURN
+    RETURN,
+    /** Item picked from storage bin during outbound order fulfilment */
+    PICKING,
+    /** Packed shipment dispatched / inventory permanently leaves the warehouse */
+    DISPATCH
 }

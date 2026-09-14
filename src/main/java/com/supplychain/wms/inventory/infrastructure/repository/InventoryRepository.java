@@ -86,6 +86,22 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long>, Jpa
             """)
     List<Object[]> sumQuantitiesByStatus();
 
+    /**
+     * Finds all AVAILABLE inventory records for a given SKU that have remaining
+     * available quantity, ordered by ID (FIFO) for allocation.
+     * Uses PESSIMISTIC_WRITE to prevent concurrent double-allocation.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT i FROM Inventory i
+            WHERE i.skuId           = :skuId
+              AND i.inventoryStatus = com.supplychain.common.domain.enums.InventoryStatus.AVAILABLE
+              AND i.availableQuantity > 0
+              AND i.deleted         = false
+            ORDER BY i.id ASC
+            """)
+    List<Inventory> findAvailableInventoryBySkuForUpdate(@Param("skuId") Long skuId);
+
     @Query("""
             SELECT COUNT(i) > 0 FROM Inventory i
             WHERE i.warehouseId     = :warehouseId
