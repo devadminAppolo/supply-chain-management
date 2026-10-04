@@ -306,10 +306,35 @@ public class ReceivingServiceImpl implements ReceivingService {
                     }
                 }
             }
-            if (skuId == null) {
-                skuId = 1L;
-                productId = 1L;
-                uomId = 1L;
+            if (skuId == null && itemCodeToLookup != null) {
+                log.info("SKU not found for item code '{}', auto-creating product and SKU", itemCodeToLookup);
+                String productName = asnLine.getItemName() != null ? asnLine.getItemName() : itemCodeToLookup;
+
+                Product product = productRepository.findByProductCodeAndDeletedFalse(itemCodeToLookup)
+                        .orElseGet(() -> productRepository.save(Product.builder()
+                                .productCode(itemCodeToLookup)
+                                .productName(productName)
+                                .deleted(false)
+                                .build()));
+
+                productId = product.getId();
+                uomId = product.getUomId();
+
+                Sku savedSku = skuRepository.save(Sku.builder()
+                        .productId(productId)
+                        .skuCode(itemCodeToLookup)
+                        .deleted(false)
+                        .build());
+                skuId = savedSku.getId();
+
+                log.info("Auto-created SKU ID {} ('{}') linked to Product ID {}", skuId, itemCodeToLookup, productId);
+            }
+
+            if (uomId == null) {
+                String code = itemCodeToLookup != null ? itemCodeToLookup : "(unknown)";
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "Item '" + code + "' has no Unit of Measure (UOM) configured. "
+                                + "Assign a UOM to the product in the catalog before receiving.");
             }
 
             // Resolve or create Pallet master record
@@ -404,6 +429,13 @@ public class ReceivingServiceImpl implements ReceivingService {
             String batchNum = pallet.getBatchNumber();
             String serialNum = pallet.getSerialNumber();
 
+            if (uomId == null) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "Pallet '" + pallet.getPalletNumber() + "' (item: " + pallet.getItemCode()
+                                + ") has no Unit of Measure configured. "
+                                + "Update the product's UOM in the catalog, then update the pallet record and retry.");
+            }
+
             // 1. STAGING Inventory update
             Optional<Inventory> existingInvOpt = inventoryRepository.findInventoryByKey(
                     warehouseId, stagingBinId, skuId, batchNum, serialNum, InventoryStatus.AVAILABLE);
@@ -424,9 +456,9 @@ public class ReceivingServiceImpl implements ReceivingService {
                         .dcId(receiving.getDcId())
                         .warehouseId(warehouseId)
                         .binId(stagingBinId)
-                        .productId(productId != null ? productId : 1L)
+                        .productId(productId)
                         .skuId(skuId)
-                        .uomId(uomId != null ? uomId : 1L)
+                        .uomId(uomId)
                         .lotNumber(batchNum)
                         .serialNumber(serialNum)
                         .inventoryStatus(InventoryStatus.AVAILABLE)

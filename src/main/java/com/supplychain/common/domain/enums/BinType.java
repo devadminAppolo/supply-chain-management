@@ -4,6 +4,7 @@ public enum BinType {
     STANDARD,
     PICKING,
     RESERVE,
+    RESERVED,
     BULK,
     REPLENISHMENT,
     STAGING,

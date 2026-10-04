@@ -22,4 +22,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<Product> findAllByDeletedFalseOrderByProductNameAsc();
 
     Optional<Product> findByProductNameAndDeletedFalse(String productName);
+
+    Optional<Product> findByProductCodeAndDeletedFalse(String productCode);
 }
