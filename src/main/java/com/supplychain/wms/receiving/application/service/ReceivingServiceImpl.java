@@ -47,6 +47,7 @@ import com.supplychain.wms.receiving.domain.model.Receiving;
 import com.supplychain.wms.receiving.domain.model.ReceivingPallet;
 import com.supplychain.wms.receiving.infrastructure.mapper.ReceivingMapper;
 import com.supplychain.wms.receiving.infrastructure.mapper.ReceivingPalletMapper;
+import com.supplychain.catalog.infrastructure.repository.UomRepository;
 import com.supplychain.wms.receiving.infrastructure.repository.ReceivingPalletRepository;
 import com.supplychain.wms.receiving.infrastructure.repository.ReceivingRepository;
 import lombok.RequiredArgsConstructor;
@@ -89,6 +90,7 @@ public class ReceivingServiceImpl implements ReceivingService {
     private final WarehouseRepository warehouseRepository;
     private final SkuRepository skuRepository;
     private final ProductRepository productRepository;
+    private final UomRepository uomRepository;
     private final PalletService palletService;
     private final ReceivingMapper receivingMapper;
     private final ReceivingPalletMapper receivingPalletMapper;
@@ -331,10 +333,17 @@ public class ReceivingServiceImpl implements ReceivingService {
             }
 
             if (uomId == null) {
-                String code = itemCodeToLookup != null ? itemCodeToLookup : "(unknown)";
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                        "Item '" + code + "' has no Unit of Measure (UOM) configured. "
-                                + "Assign a UOM to the product in the catalog before receiving.");
+                // Fallback: try to resolve UOM from the ASN line's quantityUom name
+                String uomName = asnLine.getQuantityUom();
+                if (uomName != null && !uomName.isBlank()) {
+                    uomId = uomRepository.findByUomNameAndDeletedFalse(uomName)
+                            .map(uom -> uom.getId())
+                            .orElse(null);
+                }
+                if (uomId == null) {
+                    String code = itemCodeToLookup != null ? itemCodeToLookup : "(unknown)";
+                    log.warn("No UOM found for item '{}' (quantityUom='{}'). Proceeding with null uomId.", code, uomName);
+                }
             }
 
             // Resolve or create Pallet master record
