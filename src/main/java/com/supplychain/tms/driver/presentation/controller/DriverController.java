@@ -1,6 +1,7 @@
 package com.supplychain.tms.driver.presentation.controller;
 
 import com.supplychain.common.application.dto.ApiResponse;
+import com.supplychain.common.application.dto.DropdownOptionDto;
 import com.supplychain.tms.driver.application.dto.DriverDto;
 import com.supplychain.tms.driver.application.service.DriverService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,11 @@ public class DriverController {
     public ResponseEntity<ApiResponse<List<DriverDto>>> list() {
         List<DriverDto> drivers = driverService.findAll();
         return ResponseEntity.ok(ApiResponse.success(drivers));
+    }
+
+    @GetMapping("/dropdown")
+    public ResponseEntity<ApiResponse<List<DropdownOptionDto>>> findDropdown() {
+        return ResponseEntity.ok(ApiResponse.success(driverService.findDropdown()));
     }
 
     @PostMapping

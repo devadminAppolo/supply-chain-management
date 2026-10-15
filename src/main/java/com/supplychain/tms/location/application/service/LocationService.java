@@ -1,5 +1,6 @@
 package com.supplychain.tms.location.application.service;
 
+import com.supplychain.common.application.dto.DropdownOptionDto;
 import com.supplychain.common.application.dto.PageResponse;
 import com.supplychain.common.domain.enums.LocationType;
 import com.supplychain.tms.location.application.dto.LocationDto;
@@ -18,6 +19,8 @@ public interface LocationService {
     LocationDto findById(Long id);
 
     PageResponse<LocationDto> findAll(String search, LocationType locationType, Pageable pageable);
+
+    List<DropdownOptionDto> findDropdown();
 
     void deleteById(Long id);
 

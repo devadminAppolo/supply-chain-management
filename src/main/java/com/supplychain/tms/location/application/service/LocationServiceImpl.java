@@ -1,5 +1,6 @@
 package com.supplychain.tms.location.application.service;
 
+import com.supplychain.common.application.dto.DropdownOptionDto;
 import com.supplychain.common.application.dto.PageResponse;
 import com.supplychain.common.domain.enums.LocationType;
 import com.supplychain.tms.location.application.dto.LocationDto;
@@ -100,6 +101,17 @@ public class LocationServiceImpl implements LocationService {
     public PageResponse<LocationDto> findAll(String search, LocationType locationType, Pageable pageable) {
         Specification<Location> spec = buildSpec(search, locationType);
         return PageResponse.of(repository.findAll(spec, pageable).map(mapper::toDto));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DropdownOptionDto> findDropdown() {
+        return repository.findAllByDeletedFalseOrderByLocationNameAsc()
+                .stream()
+                .map(l -> new DropdownOptionDto(
+                        (l.getLocationCode() != null ? l.getLocationCode() + " - " : "") + l.getLocationName(),
+                        String.valueOf(l.getId())))
+                .toList();
     }
 
     @Override

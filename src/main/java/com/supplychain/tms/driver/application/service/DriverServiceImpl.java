@@ -1,5 +1,6 @@
 package com.supplychain.tms.driver.application.service;
 
+import com.supplychain.common.application.dto.DropdownOptionDto;
 import com.supplychain.tms.driver.application.dto.DriverDto;
 import com.supplychain.tms.driver.domain.model.Driver;
 import com.supplychain.tms.driver.infrastructure.mapper.DriverMapper;
@@ -35,6 +36,17 @@ public class DriverServiceImpl implements DriverService {
     @Override
     public List<DriverDto> findAll() {
         return mapper.toDtoList(repository.findAll());
+    }
+
+    @Override
+    public List<DropdownOptionDto> findDropdown() {
+        return repository.findAllByDeletedDateIsNullOrderByDriverNameAsc()
+                .stream()
+                .map(d -> new DropdownOptionDto(
+                        (d.getDriverName() != null ? d.getDriverName() : "") +
+                                (d.getDriverNumber() != null ? " (" + d.getDriverNumber() + ")" : ""),
+                        String.valueOf(d.getId())))
+                .toList();
     }
 
     @Override

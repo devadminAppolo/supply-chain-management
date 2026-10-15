@@ -6,6 +6,9 @@ import com.supplychain.catalog.infrastructure.repository.ProductRepository;
 import com.supplychain.catalog.infrastructure.repository.SkuRepository;
 import com.supplychain.common.application.dto.DropdownOptionDto;
 import com.supplychain.common.application.dto.PageResponse;
+import com.supplychain.customer.domain.enums.CustomerStatus;
+import com.supplychain.customer.domain.model.Customer;
+import com.supplychain.customer.application.service.CustomerService;
 import com.supplychain.outbound.outboundorder.application.dto.OutboundOrderCreateRequestDto;
 import com.supplychain.outbound.outboundorder.application.dto.OutboundOrderLineRequestDto;
 import com.supplychain.outbound.outboundorder.application.dto.OutboundOrderLineUpdateRequestDto;
@@ -53,6 +56,7 @@ public class OutboundOrderServiceImpl implements OutboundOrderService {
     private final ProductRepository           productRepository;
     private final OutboundOrderMapper         mapper;
     private final OutboundOrderLineMapper     lineMapper;
+    private final CustomerService             customerService;
 
     // @Lazy to break circular dependency:
     // OutboundOrderServiceImpl → PickingService → PackingService
@@ -66,29 +70,33 @@ public class OutboundOrderServiceImpl implements OutboundOrderService {
     @Override
     @Transactional
     public OutboundOrderResponseDto createOutboundOrder(OutboundOrderCreateRequestDto request) {
-        log.info("Creating Outbound Order for customer: {}", request.getCustomerCode());
+        log.info("Creating Outbound Order for customerId: {}", request.getCustomerId());
 
         // 1. Validate time windows
         validateTimeWindows(request.getPickTimeWindowStart(),   request.getPickTimeWindowEnd(),   "pick");
         validateTimeWindows(request.getDeliveryTimeWindowStart(), request.getDeliveryTimeWindowEnd(), "delivery");
 
-        // 2. Validate and resolve origin location
+        // 2. Validate and resolve customer from Customer Master
+        Customer customer = validateAndGetActiveCustomer(request.getCustomerId());
+
+        // 3. Validate and resolve origin location
         Location origin = validateAndGetLocation(request.getOriginLocationId(), "Origin");
 
-        // 3. Validate and resolve destination location
+        // 4. Validate and resolve destination location
         Location destination = validateAndGetLocation(request.getDestinationLocationId(), "Destination");
 
-        // 4. Generate order number (backend-authoritative, never client-supplied)
+        // 5. Generate order number (backend-authoritative, never client-supplied)
         String orderNumber = generateOrderNumber();
 
-        // 5. Build header entity
+        // 6. Build header entity
         OutboundOrder order = OutboundOrder.builder()
                 .orderNumber(orderNumber)
                 .orderDate(request.getOrderDate())
                 .orderType(request.getOrderType())
                 .orderStatus(OutboundOrderStatus.DRAFT)
-                .customerCode(request.getCustomerCode().trim())
-                .customerName(request.getCustomerName().trim())
+                .customerId(customer.getId())
+                .customerCode(customer.getCustomerCode())
+                .customerName(customer.getCustomerName())
                 .originLocationId(origin.getId())
                 .originLocationCode(origin.getLocationCode())
                 .originLocationName(origin.getLocationName())
@@ -143,12 +151,20 @@ public class OutboundOrderServiceImpl implements OutboundOrderService {
         validateTimeWindows(request.getPickTimeWindowStart(),    request.getPickTimeWindowEnd(),    "pick");
         validateTimeWindows(request.getDeliveryTimeWindowStart(), request.getDeliveryTimeWindowEnd(), "delivery");
 
+        // Validate and resolve customer from Customer Master
+        Customer customer = validateAndGetActiveCustomer(request.getCustomerId());
+
         // Validate/resolve locations (only update snapshots if location changed)
         Location origin      = validateAndGetLocation(request.getOriginLocationId(),      "Origin");
         Location destination = validateAndGetLocation(request.getDestinationLocationId(), "Destination");
 
-        // Apply mutable header fields
+        // Apply mutable header fields (mapper ignores customerId, customerCode, customerName)
         mapper.updateEntity(request, order);
+
+        // Refresh customer reference and snapshots
+        order.setCustomerId(customer.getId());
+        order.setCustomerCode(customer.getCustomerCode());
+        order.setCustomerName(customer.getCustomerName());
 
         // Refresh location snapshots (mapper ignores them deliberately)
         order.setOriginLocationId(origin.getId());
@@ -348,6 +364,15 @@ public class OutboundOrderServiceImpl implements OutboundOrderService {
         return repository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Outbound Order not found with id: " + id));
+    }
+
+    private Customer validateAndGetActiveCustomer(Long customerId) {
+        Customer customer = customerService.getActiveEntityById(customerId);
+        if (!CustomerStatus.ACTIVE.name().equalsIgnoreCase(customer.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Customer is not active: " + customer.getCustomerCode());
+        }
+        return customer;
     }
 
     private Location validateAndGetLocation(Long locationId, String role) {

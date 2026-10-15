@@ -1,6 +1,7 @@
 package com.supplychain.tms.location.presentation.controller;
 
 import com.supplychain.common.application.dto.ApiResponse;
+import com.supplychain.common.application.dto.DropdownOptionDto;
 import com.supplychain.common.application.dto.PageResponse;
 import com.supplychain.common.domain.enums.LocationType;
 import com.supplychain.tms.location.application.dto.LocationDto;
@@ -63,6 +64,11 @@ public class LocationController {
             @PageableDefault(size = 20, sort = "locationName") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success(
                 locationService.findAll(search, locationType, pageable)));
+    }
+
+    @GetMapping("/dropdown")
+    public ResponseEntity<ApiResponse<List<DropdownOptionDto>>> findDropdown() {
+        return ResponseEntity.ok(ApiResponse.success(locationService.findDropdown()));
     }
 
     @DeleteMapping("/{id}")

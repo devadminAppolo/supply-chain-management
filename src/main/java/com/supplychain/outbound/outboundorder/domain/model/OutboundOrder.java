@@ -50,7 +50,12 @@ public class OutboundOrder extends BaseEntity {
     @Column(name = "order_status", nullable = false)
     private OutboundOrderStatus orderStatus;
 
-    // 5. Customer (denormalized – no separate customer master in this WMS)
+    // 5. Customer – FK to Customer Master (nullable for backward compat with existing orders)
+    @Column(name = "customer_id")
+    private Long customerId;
+
+    // Denormalized snapshot populated from Customer Master at order-creation time.
+    // Retained for historical orders that predate the Customer Master module.
     @Column(name = "customer_code", nullable = false)
     private String customerCode;
 

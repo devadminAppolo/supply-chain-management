@@ -31,6 +31,10 @@ public interface OutboundOrderMapper {
     @Mapping(target = "orderStatus",             ignore = true)
     @Mapping(target = "lines",                   ignore = true)
     @Mapping(target = "totalAmount",             ignore = true)
+    // customerId and the denormalized snapshots are managed by the service
+    @Mapping(target = "customerId",              ignore = true)
+    @Mapping(target = "customerCode",            ignore = true)
+    @Mapping(target = "customerName",            ignore = true)
     @Mapping(target = "originLocationCode",      ignore = true)
     @Mapping(target = "originLocationName",      ignore = true)
     @Mapping(target = "destinationLocationCode", ignore = true)

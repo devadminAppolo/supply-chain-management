@@ -11,4 +11,6 @@ public interface LocationRepository extends JpaRepository<Location, Long>, JpaSp
     boolean existsByLocationCodeAndDeletedFalse(String locationCode);
 
     boolean existsByLocationCodeAndIdNotAndDeletedFalse(String locationCode, Long id);
+
+    java.util.List<Location> findAllByDeletedFalseOrderByLocationNameAsc();
 }

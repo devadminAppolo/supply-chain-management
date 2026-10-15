@@ -21,7 +21,10 @@ public class OutboundOrderResponseDto extends BaseDto {
     private OutboundOrderType orderType;
     private OutboundOrderStatus orderStatus;
 
-    // Customer
+    // Customer – FK to Customer Master (null for orders predating the Customer Master module)
+    private Long customerId;
+
+    // Denormalized snapshot (populated at order-creation time from Customer Master)
     private String customerCode;
     private String customerName;
 

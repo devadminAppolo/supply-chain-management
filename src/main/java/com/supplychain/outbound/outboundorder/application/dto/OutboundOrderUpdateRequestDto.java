@@ -2,7 +2,6 @@ package com.supplychain.outbound.outboundorder.application.dto;
 
 import com.supplychain.outbound.outboundorder.domain.enums.OutboundOrderType;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -29,11 +28,9 @@ public class OutboundOrderUpdateRequestDto {
     @NotNull(message = "Order type is required")
     private OutboundOrderType orderType;
 
-    @NotBlank(message = "Customer code is required")
-    private String customerCode;
-
-    @NotBlank(message = "Customer name is required")
-    private String customerName;
+    // Customer – must reference an existing, ACTIVE Customer Master record
+    @NotNull(message = "Customer ID is required")
+    private Long customerId;
 
     @NotNull(message = "Origin location ID is required")
     private Long originLocationId;
